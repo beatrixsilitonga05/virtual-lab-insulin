@@ -1,368 +1,125 @@
-```html
 <!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Molecular Cloning Lab — Produksi Insulin Manusia (pUC19-INS)</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Virtual Lab Insulin</title>
 <style>
-  :root {
-    --bench-top: #182338;
-    --bench-edge: #0d1422;
-    --glass: rgba(255, 255, 255, 0.08);
-    --glass-border: rgba(255, 255, 255, 0.22);
-  }
-  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-  body {
-    margin: 0;
-    background: #090e17;
-    color: #f1f5f9;
-    font-family: 'Inter', system-ui, sans-serif;
-    overflow-x: hidden;
-    touch-action: manipulation;
-  }
-  .mono { font-family: 'JetBrains Mono', monospace; }
-
-  /* Realistic Lab Bench & Glassware */
-  .lab-bench {
-    position: relative;
-    background: radial-gradient(circle at 50% 15%, #1e2d47 0%, #101827 72%, #0a0f1a 100%);
-    border: 1px solid #2b3c59;
-    box-shadow: inset 0 0 60px rgba(0,0,0,0.65), 0 12px 32px rgba(0,0,0,0.5);
-    border-radius: 18px;
-    overflow: hidden;
-  }
-  .bench-counter {
-    background: linear-gradient(180deg, #233148 0%, #162032 14%, #0e1522 100%);
-    border-top: 2px solid #475d82;
-    box-shadow: 0 -8px 24px rgba(0,0,0,0.55);
-  }
-
-  /* Glass Vial & Liquid Meniscus */
-  .glass-tube {
-    position: relative;
-    background: linear-gradient(90deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.14) 100%);
-    border: 1.5px solid rgba(226, 232, 240, 0.45);
-    box-shadow: inset -3px 0 6px rgba(255,255,255,0.12), 0 6px 14px rgba(0,0,0,0.45);
-    overflow: hidden;
-  }
-  .liquid-fill {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s;
-  }
-  .liquid-fill::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: rgba(255,255,255,0.45);
-    border-radius: 50%;
-  }
-
-  /* Ice Bucket Texture */
-  .ice-bucket {
-    background: linear-gradient(145deg, #1d4ed8, #1e3a8a);
-    border: 2px solid #60a5fa;
-    box-shadow: inset 0 4px 12px rgba(255,255,255,0.25), 0 8px 20px rgba(0,0,0,0.5);
-  }
-  .ice-cubes {
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(224,242,254,0.85) 0 10px, transparent 12px),
-      radial-gradient(circle at 65% 25%, rgba(186,230,253,0.8) 0 12px, transparent 14px),
-      radial-gradient(circle at 40% 70%, rgba(240,249,255,0.9) 0 11px, transparent 13px),
-      radial-gradient(circle at 82% 68%, rgba(186,230,253,0.75) 0 10px, transparent 12px);
-  }
-
-  /* Interactive Tool Hover & Drag States */
-  .draggable-item {
-    cursor: grab;
-    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-  }
-  .draggable-item:hover { transform: translateY(-3px); }
-  .draggable-item:active { cursor: grabbing; transform: scale(0.97); }
-  .drop-zone {
-    transition: all 0.2s ease;
-  }
-  .drop-zone.highlight {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35), inset 0 0 24px rgba(56, 189, 248, 0.2) !important;
-    transform: scale(1.02);
-  }
-
-  /* Animations */
-  @keyframes vibrate {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    25% { transform: translate(-2px, 1px) rotate(-1.5deg); }
-    50% { transform: translate(2px, -1px) rotate(1.5deg); }
-    75% { transform: translate(-1px, -2px) rotate(-1deg); }
-  }
-  .vibrating { animation: vibrate 0.09s linear infinite; }
-
-  @keyframes rotorSpin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  .spinning-fast { animation: rotorSpin 0.18s linear infinite; }
-
-  @keyframes flameFlicker {
-    0%, 100% { transform: scaleY(1) scaleX(1); opacity: 0.95; }
-    50% { transform: scaleY(1.12) scaleX(0.92); opacity: 1; }
-  }
-  .flame-anim { transform-origin: bottom center; animation: flameFlicker 0.22s ease-in-out infinite; }
-
-  @keyframes bubbleRise {
-    0% { transform: translateY(0) scale(0.7); opacity: 0.8; }
-    100% { transform: translateY(-48px) scale(1.2); opacity: 0; }
-  }
-  .bubble { animation: bubbleRise 1.1s ease-in infinite; }
-
-  @keyframes laminarFlow {
-    0% { stroke-dashoffset: 24; }
-    100% { stroke-dashoffset: 0; }
-  }
-  .airflow-line { stroke-dasharray: 6 6; animation: laminarFlow 0.7s linear infinite; }
-
-  @keyframes tipDrop {
-    0% { transform: translateY(-24px) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(28px) rotate(55deg); opacity: 0; }
-  }
-  .eject-anim { animation: tipDrop 0.45s ease-in forwards; }
-
-  /* Floating Cursor-Following Tool */
-  #floating-tool {
-    position: fixed;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-18px, -115px);
-    filter: drop-shadow(0 10px 14px rgba(0,0,0,0.65));
-    transition: opacity 0.12s ease;
-  }
-
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0f172a; }
-  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-
-  @media print {
-    .no-print { display: none !important; }
-    body { background: #fff !important; color: #000 !important; }
-    .print-card { background: #fff !important; color: #000 !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
-  }
-</style>
-</head>
-<body class="min-h-screen flex flex-col">
-
-<!-- FLOATING CURSOR TOOL (MICROPIPETTE / SPREADER / LOOP / SCALPEL) -->
-<div id="floating-tool" class="hidden"></div>
-
-<!-- TOP HUD -->
-<header class="no-print sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-3 py-2.5">
-  <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-    <div class="flex items-center gap-2.5">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-sky-600 flex items-center justify-center text-lg shadow-lg shadow-sky-500/20">🧬</div>
-      <div>
-        <div class="text-sm sm:text-base font-extrabold tracking-tight text-sky-300 leading-tight">MOLECULAR CLONING LAB</div>
-        <div class="text-[11px] text-slate-400">Produksi Insulin Manusia (Vektor pUC19-INS)</div>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2 flex-wrap">
-      <span id="hud-station" class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-800 border border-slate-700 text-slate-200">Registrasi</span>
-      <span id="hud-accuracy" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 border border-emerald-600/50 text-emerald-300">Akurasi: 100%</span>
-      <button onclick="toggleNotebook()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-300">📒 Log Lab (<span id="log-count">0</span>)</button>
-      <button onclick="toggleSound()" id="btn-sound" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200">🔊 Audio</button>
-    </div>
-  </div>
-  <div class="max-w-6xl mx-auto mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-    <div id="hud-progress" class="h-full bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 transition-all duration-500" style="width: 0%"></div>
-  </div>
-</header>
-
-<!-- LAB NOTEBOOK DRAWER -->
-<div id="notebook-modal" class="no-print hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
-    <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
-      <h3 class="font-bold text-sky-300 text-base">📒 Catatan Laboratorium (Lab Notebook)</h3>
-      <button onclick="toggleNotebook()" class="text-slate-400 hover:text-white text-sm px-2 py-1 rounded bg-slate-800">Tutup ✕</button>
-    </div>
-    <div id="notebook-list" class="max-h-72 overflow-y-auto space-y-2 text-xs text-slate-300"></div>
-  </div>
-</div>
-
-<!-- MAIN WORKSPACE -->
-<main id="app" class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-4 pb-24"></main>
-
-<!-- BOTTOM NAVIGATION -->
-<nav id="bottom-nav" class="no-print fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-3 py-2.5 flex items-center justify-between gap-2">
-  <div class="max-w-6xl mx-auto w-full flex items-center justify-between gap-2">
-    <button id="btn-prev" onclick="prevStation()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 disabled:opacity-40">← Sebelumnya</button>
-    <div id="active-tool-pill" class="text-xs text-center text-slate-400 font-medium truncate px-2">Tangan Kosong (Klik/Tarik Alat)</div>
-    <button id="btn-next" onclick="nextStation()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-teal-500 to-sky-600 hover:from-teal-400 hover:to-sky-500 text-white shadow-lg shadow-sky-500/20 disabled:opacity-40">Lanjut →</button>
-  </div>
-</nav>
-
+*{box-sizing:border-box;user-select:none}body{margin:0;background:#0b1320;color:#f1f5f9;font:15px/1.45 system-ui,sans-serif}
+header{position:sticky;top:0;z-index:9;background:#0f172a;border-bottom:1px solid #334155;padding:10px 14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;font-weight:700}
+.bdg{background:#1e293b;border:1px solid #475569;padding:3px 9px;border-radius:99px;font-size:.8rem}
+.bar{height:6px;background:#1e293b;border-radius:9px;margin-top:8px}.bar i{display:block;height:100%;background:#14b8a6;border-radius:9px;transition:.3s}
+main{max-width:720px;margin:0 auto;padding:12px 12px 84px}.card{background:#131f33;border:1px solid #2d4366;border-radius:14px;padding:14px}
+.sop{background:#0f1c2e;border-left:4px solid #0ea5e9;padding:9px 12px;border-radius:8px;margin-bottom:12px}
+.sop h3{margin:0 0 4px;color:#38bdf8;font-size:1rem}.sop p{margin:0;font-size:.88rem;color:#cbd5e1}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;margin:4px 0}
+button:disabled{opacity:.4;cursor:not-allowed}.bp{background:linear-gradient(135deg,#14b8a6,#0ea5e9);color:#fff;width:100%}
+.bo{background:#1e293b;color:#f1f5f9;border:1px solid #475569;width:100%;text-align:left}.bo.ok{border-color:#22c55e;background:#14532d66}
+.bw{background:#f59e0b;color:#0f172a;width:100%}.bd{background:#ef4444;color:#fff;width:100%}
+input{width:100%;padding:10px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff;font:inherit;margin:4px 0 10px}
+.bench{background:#0f172a;border:2px solid #334155;border-radius:12px;padding:12px;margin:8px 0;text-align:center}
+.lcd{background:#020617;color:#22c55e;font-family:monospace;padding:6px;border-radius:6px;border:1px solid #334155;margin:6px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pip{display:flex;align-items:center;justify-content:space-between;background:#0f172a;padding:8px;border-radius:10px;border:1px solid #334155;margin-bottom:8px}
+.petri{position:relative;width:210px;height:210px;margin:8px auto;border-radius:50%;background:#fde68a;border:5px solid #94a3b8;touch-action:none;overflow:hidden}
+.col{position:absolute;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);border:1.5px solid #0004;cursor:pointer}
+.msg{padding:10px;border-radius:10px;margin-top:10px;font-weight:600}.msg.ok{background:#14532d;color:#dcfce7}.msg.bad{background:#7f1d1d;color:#fee2e2}.msg.in{background:#1e3a8a;color:#dbeafe}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0f172a;border-top:1px solid #334155;padding:10px;display:flex;gap:8px}
+nav button{margin:0;flex:1;text-align:center}table{width:100%;border-collapse:collapse;font-size:.88rem}td{padding:6px;border-bottom:1px solid #334155}
+@media print{header,nav,.np{display:none}body{background:#fff;color:#000}.card{border:1px solid #ccc;background:#fff}}
+</style></head>
+<body>
+<header class="np"><div class="top"><span style="color:#38bdf8">🧬 VIRTUAL LAB INSULIN</span><div><span class="bdg" id="hs">Registrasi</span> <span class="bdg" id="ha">Akurasi 100%</span></div></div><div class="bar"><i id="hb" style="width:0%"></i></div></header>
+<main id="app"></main><nav class="np" id="nav"></nav>
 <script>
-/* ============================================================================
-   1. WEB AUDIO SYNTHESIZER (REALISTIC LAB SOUND EFFECTS)
-   ============================================================================ */
-let soundEnabled = true;
-let audioCtx = null;
+const S={st:0,u:{n:'',k:'',g:''},err:0,done:{},m:null,log:[],
+ s1:{a:0,b:0,c:0,d:0,e:0},s2:{a:0,b:0,c:0,d:0},s3:{v:5,t:0,c:0,lr:'',buf:0,puc:0,ins:0,eco:0,hin:0,ok:0},
+ s4:{m:0,v:0,i:0,w:0,r:0,uv:0,cut:0},s5:{a:0,b:0,c:0,d:0,v:0,ok:0},s6:{a:0,b:0,t:0,tm:null,c:0,d:0,ok:0},
+ s7:{a:0,b:0,c:0,d:0,p:0},s8:{a:0,b:0,c:0},s9:{a:0,b:0,c:0,ok:0},s10:{a:0,b:0,c:0}};
+const beep=(f=520,d=.07)=>{try{const x=new(window.AudioContext||window.webkitAudioContext)(),o=x.createOscillator(),g=x.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(x.destination);o.start();o.stop(x.currentTime+d)}catch(e){}};
+const say=(t,tx)=>{S.m={t,tx};if(t=='bad'){S.err++;beep(180,.2)}else beep(620,.08);R()};
+const win=(n,tx)=>{if(!S.done[n]){S.done[n]=1;S.log.push(`Stasiun ${n}: ${tx}`)}say('ok',`✅ Stasiun ${n} Selesai! ${tx}`)};
+const go=n=>{if(S.s6.tm){clearInterval(S.s6.tm);S.s6.tm=null}S.st=n;S.m=null;beep(500,.05);R();window.scrollTo(0,0)};
 
-function playTone(freq, duration = 0.08, type = 'sine', gainVal = 0.12, slideTo = null) {
-  if (!soundEnabled) return;
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, audioCtx.currentTime + duration);
-    gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-  } catch (e) {}
+function R(){
+ const acc=Math.max(0,100-S.err*3);
+ document.getElementById('hs').textContent=S.st==0?'Registrasi':(S.st==11?'Laporan':'Stasiun '+S.st+'/10');
+ document.getElementById('ha').textContent='Akurasi '+acc+'%';
+ document.getElementById('hb').style.width=(Math.min(S.st,10)*10)+'%';
+ const app=document.getElementById('app'),nav=document.getElementById('nav');
+ if(S.st==0){nav.style.display='none';app.innerHTML=`<div class="card"><h2 style="margin:0 0 6px;color:#38bdf8">🧬 PRAKTIKUM REKAYASA GENETIKA</h2><p style="color:#cbd5e1;font-size:.9rem">Simulasi 10 Stasiun Kerja: Pembuatan Bakteri <i>E. coli</i> Penghasil Insulin Manusia (Vektor pUC19-INS).</p>
+ <label>Nama Lengkap / Anggota<input value="${S.u.n}" oninput="S.u.n=this.value;chk()"></label>
+ <label>Kelas<input value="${S.u.k}" oninput="S.u.k=this.value;chk()"></label>
+ <label>Kelompok<input value="${S.u.g}" oninput="S.u.g=this.value;chk()"></label>
+ <button class="bp" id="b0" onclick="go(1)" disabled>MASUK KE LABORATORIUM →</button></div>`;chk();return}
+ if(S.st==11){nav.style.display='none';app.innerHTML=`<div class="card"><h2 style="margin:0 0 8px;color:#22c55e">🏆 LAPORAN PRAKTIKUM SELESAI</h2>
+ <table><tr><td>Nama</td><td><b>${S.u.n}</b></td></tr><tr><td>Kelas / Kelompok</td><td>${S.u.k} / ${S.u.g}</td></tr><tr><td>Konstruksi</td><td>pUC19-INS (2686 bp + 333 bp)</td></tr><tr><td>Akurasi Lab</td><td><b>${acc}%</b> (${S.err} kesalahan)</td></tr></table>
+ <ul style="font-size:.85rem;color:#cbd5e1;padding-left:18px">${S.log.map(x=>`<li>${x}</li>`).join('')}</ul>
+ <button class="bp np" onclick="window.print()">🖨️ CETAK / SIMPAN PDF</button><button class="bo np" style="text-align:center" onclick="location.reload()">🔄 ULANGI LAB</button></div>`;return}
+ nav.style.display='flex';
+ const fn=[null,st1,st2,st3,st4,st5,st6,st7,st8,st9,st10][S.st];
+ app.innerHTML=fn()+(S.m?`<div class="msg ${S.m.t}">${S.m.tx}</div>`:'');
+ nav.innerHTML=`<button class="bo" onclick="go(${S.st-1})">← Kembali</button><button class="bp" onclick="go(${S.st+1})" ${S.done[S.st]?'':'disabled'}>${S.st==10?'Laporan Akhir 🏆':'Lanjut →'}</button>`;
 }
+const chk=()=>{const b=document.getElementById('b0');if(b)b.disabled=!(S.u.n.trim()&&S.u.k.trim()&&S.u.g.trim())};
 
-const SFX = {
-  click: () => playTone(680, 0.045, 'triangle', 0.1),
-  tipAttach: () => { playTone(520, 0.05, 'square', 0.08); setTimeout(() => playTone(880, 0.06, 'triangle', 0.1), 45); },
-  aspirate: () => playTone(320, 0.16, 'sine', 0.12, 620),
-  dispense: () => playTone(600, 0.15, 'sine', 0.12, 290),
-  eject: () => {
-    playTone(260, 0.07, 'sawtooth', 0.09, 140);
-    setTimeout(() => playTone(190, 0.09, 'triangle', 0.09, 110), 80);
-  },
-  centrifuge: () => {
-    for (let i = 0; i < 8; i++) {
-      setTimeout(() => playTone(220 + i * 55, 0.09, 'triangle', 0.08), i * 95);
-    }
-  },
-  vortex: () => {
-    for (let i = 0; i < 6; i++) {
-      setTimeout(() => playTone(160 + (i % 2) * 45, 0.06, 'sawtooth', 0.07), i * 65);
-    }
-  },
-  bunsen: () => playTone(110, 0.32, 'sawtooth', 0.1, 75),
-  spray: () => playTone(950, 0.14, 'sawtooth', 0.06, 400),
-  success: () => {
-    playTone(523.25, 0.09, 'triangle', 0.13);
-    setTimeout(() => playTone(659.25, 0.09, 'triangle', 0.13), 95);
-    setTimeout(() => playTone(783.99, 0.18, 'triangle', 0.14), 190);
-  },
-  alarm: () => {
-    playTone(220, 0.16, 'sawtooth', 0.16);
-    setTimeout(() => playTone(165, 0.22, 'sawtooth', 0.16), 165);
-  }
-};
+function st1(){const s=S.s1,it=[['a','🥼 Pakai Jas Lab'],['b','🧤 Sarung Tangan Nitril'],['c','💡 Matikan Lampu UV'],['d','💨 Nyalakan Blower Laminar'],['e','🧴 Semprot Alkohol 70%']];
+ return `<div class="card"><div class="sop"><h3>Stasiun 1/10 — APD & Sterilisasi Biosafety Cabinet</h3><p>Aktifkan seluruh kelengkapan APD dan alat kabinet secara berurutan.</p></div>
+ ${it.map(([k,t])=>`<button class="bo ${s[k]?'ok':''}" onclick="a1('${k}')">${s[k]?'✔ ':''}${t}</button>`).join('')}</div>`}
+function a1(k){const s=S.s1;if(k=='d'&&!s.c)return say('bad','⚠️ Matikan lampu UV dulu sebelum menyalakan blower!');if(k=='e'&&(!s.b||!s.d))return say('bad','⚠️ Pakai sarung tangan & nyalakan blower dulu!');s[k]=1;if(s.a&&s.b&&s.c&&s.d&&s.e)win(1,'APD lengkap & meja kerja steril.');else R()}
 
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-  document.getElementById('btn-sound').textContent = soundEnabled ? '🔊 Audio' : '🔇 Mute';
-}
+function st2(){const s=S.s2;return `<div class="card"><div class="sop"><h3>Stasiun 2/10 — Isolasi Plasmid pUC19 (Miniprep)</h3><p>Ekstrak DNA plasmid murni dari kultur bakteri stok.</p></div>
+ <div class="bench">⚙️ Microcentrifuge <div class="lcd">${s.a?'PELET MENGENDAP':'12.000 RPM'}</div>
+ <button class="bo ${s.a?'ok':''}" onclick="S.s2.a=1;say('in','Sel mengendap di dasar tabung.')" ${s.a?'disabled':''}>1. Putar Centrifuge</button>
+ <button class="bo ${s.b?'ok':''}" onclick="S.s2.b=1;say('in','Supernatan cair dibuang.')" ${!s.a||s.b?'disabled':''}>2. Buang Supernatan</button>
+ <button class="bo ${s.c?'ok':''}" onclick="S.s2.c=1;say('in','Sel dilisiskan dengan Buffer P1, P2, N3.')" ${!s.b||s.c?'disabled':''}>3. Tambah Buffer Lisis & Netralisasi</button>
+ <button class="bp" onclick="S.s2.d=1;win(2,'DNA plasmid pUC19 murni berhasil disaring.')" ${!s.c||s.d?'disabled':''}>4. Saring di Spin Column</button></div></div>`}
 
-/* ============================================================================
-   2. GLOBAL STATE & TACTILE TOOL SYSTEM
-   ============================================================================ */
-const state = {
-  station: 0, // 0 = Intro, 1..10 = Lab Stations, 11 = Final Certificate
-  student: { name: '', classRoom: '', group: '' },
-  errors: 0,
-  completed: {},
-// ... existing code ... -->
-/* ============================================================================
-   6. STATION 0: BRIEFING & STUDENT REGISTRATION
-   ============================================================================ */
-function renderIntro() {
-  return `
-    <div class="max-w-2xl mx-auto mt-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-2xl">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-bold mb-3">
-        <span>🔬 VIRTUAL WET-LAB SIMULATOR</span> • <span>10 STASIUN LENGKAP</span>
-      </div>
-      <h1 class="text-xl sm:text-2xl font-extrabold text-white mb-2">Rekayasa Genetika: Kloning & Produksi Insulin Manusia (<span class="text-teal-400">pUC19-INS</span>)</h1>
-      <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
-        Selamat datang di Laboratorium Biologi Molekuler. Kamu akan menjalankan seluruh rangkaian praktikum rekayasa genetika secara nyata: mengenakan APD, mengoperasikan <i>Biosafety Cabinet</i>, mengisolasi plasmid dengan <i>Centrifuge</i>, memipet enzim restriksi tanpa kontaminasi silang, memotong pita DNA 333 bp di bawah sinar UV, melakukan <i>Heat Shock</i> 42°C tepat 45 detik, hingga memanen hormon insulin manusia.
-      </p>
+function st3(){const s=S.s3,r=[['buf','Buffer 10X',2],['puc','Plasmid pUC19',5],['ins','Gen Insulin',5],['eco','Enzim EcoRI',1],['hin','Enzim HindIII',1]],ok=r.every(x=>s[x[0]]==x[2]);
+ return `<div class="card"><div class="sop"><h3>Stasiun 3/10 — Pemotongan Enzim Restriksi</h3><p>Resep: Buffer <b>2µL</b> + pUC19 <b>5µL</b> + Gen Insulin <b>5µL</b> + EcoRI <b>1µL</b> + HindIII <b>1µL</b>. Wajib ganti <b>Tip Steril</b> tiap reagen!</p></div>
+ <div class="pip"><span>🔬 Dial: <b style="color:#38bdf8">${s.v} µL</b></span><div><button class="bo" style="width:auto;padding:4px 10px" onclick="S.s3.v=Math.max(1,S.s3.v-1);R()">−</button> <button class="bo" style="width:auto;padding:4px 10px" onclick="S.s3.v=Math.min(20,S.s3.v+1);R()">+</button></div></div>
+ <div class="grid"><button class="bw" onclick="S.s3.t=1;S.s3.c=0;S.s3.lr='';R()">📦 Pasang Tip Baru</button><button class="bd" onclick="S.s3.t=0;S.s3.c=0;R()" ${s.t?'':'disabled'}>🗑️ Buang Tip (${s.t?(s.c?'Bekas':'Steril'):'Kosong'})</button></div>
+ <div class="grid" style="margin-top:6px">${r.map(([k,n,q])=>`<button class="bo ${s[k]==q?'ok':''}" onclick="a3('${k}','${n}',${q})">${n} (${s[k]}/${q}µL)</button>`).join('')}</div>
+ <div class="bench">🌡️ Water Bath <div class="lcd">37.0 °C</div><button class="bp" onclick="S.s3.ok=1;win(3,'Plasmid & gen insulin terpotong ujung lengket (sticky ends).')" ${ok&&!s.ok?'':'disabled'}>Inkubasi Pemotongan 37°C</button></div></div>`}
+function a3(k,n,q){const s=S.s3;if(!s.t)return say('bad','⚠️ Pasang Tip Steril dulu!');if(s.c&&s.lr!=k)return say('bad','🚨 KONTAMINASI! Buang tip bekas dan pasang tip baru!');if(s.v!=q)return say('bad',`⚠️ Atur dial mikropipet ke ${q} µL untuk ${n}!`);s[k]=q;s.c=1;s.lr=k;say('in',`💧 ${q} µL ${n} masuk tabung. Buang tip sebelum ambil reagen lain!`)}
 
-      <div class="grid sm:grid-cols-3 gap-3 mb-5">
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Nama Lengkap / Anggota</label>
-          <input id="reg-name" type="text" value="${state.student.name}" oninput="state.student.name=this.value;validateStart()" placeholder="Nama siswa..." class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-sky-400 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Kelas</label>
-          <input id="reg-class" type="text" value="${state.student.classRoom}" oninput="state.student.classRoom=this.value;validateStart()" placeholder="Contoh: XII IPA 1" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-sky-400 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Kelompok</label>
-          <input id="reg-group" type="text" value="${state.student.group}" oninput="state.student.group=this.value;validateStart()" placeholder="Contoh: Kelompok 2" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-sky-400 outline-none">
-        </div>
-      </div>
+function st4(){const s=S.s4;return `<div class="card"><div class="sop"><h3>Stasiun 4/10 — Elektroforesis Gel & Ekstraksi Pita UV</h3><p>Isi sumuran gel (M, V, I), jalankan arus 100V, nyalakan UV, lalu potong pita gen insulin <b>333 bp</b>.</p></div>
+ <div class="grid"><button class="bo ${s.m?'ok':''}" onclick="S.s4.m=1;R()">💧 Sumuran M (Marker)</button><button class="bo ${s.v?'ok':''}" onclick="S.s4.v=1;R()">💧 Sumuran V (Vektor)</button><button class="bo ${s.i?'ok':''}" onclick="S.s4.i=1;R()">💧 Sumuran I (Insulin)</button><button class="bo ${s.w?'ok':''}" onclick="if(!(s.m&&s.v&&s.i))return say('bad','Isi semua sumuran dulu!');S.s4.w=1;R()">🔌 Pasang Kabel 100V</button></div>
+ <div class="bench" style="background:${s.uv?'#1e1b4b':'#042f2e'}"><div class="lcd">${s.r?(s.uv?'UV AKTIF: Pita 2686 bp & 333 bp berpendar':'GEL SELESAI BERLARI'):'TANGKI ELEKTROFORESIS'}</div>
+ <button class="bp" onclick="S.s4.r=1;say('in','DNA bermigrasi ke kutub (+). Nyalakan UV!')" ${!s.w||s.r?'disabled':''}>⚡ Jalankan Gel 100V</button>
+ <button class="bw" onclick="S.s4.uv=1;R()" ${!s.r||s.uv?'disabled':''}>🟣 Nyalakan Lampu UV</button>
+ ${s.uv?`<div class="grid" style="margin-top:8px"><button class="bo" onclick="say('bad','Itu pita vektor 2686 bp! Potong pita gen insulin 333 bp.')">🔪 Potong Pita 2686 bp</button><button class="bp" onclick="S.s4.cut=1;win(4,'Pita gen insulin 333 bp berhasil diekstraksi dari gel.')" ${s.cut?'disabled':''}>🔪 Potong Pita 333 bp</button></div>`:''}</div></div>`}
 
-      <button id="btn-enter-lab" onclick="nextStation()" disabled class="w-full py-3.5 rounded-xl font-extrabold text-sm bg-gradient-to-r from-teal-500 to-sky-600 hover:from-teal-400 hover:to-sky-500 text-white shadow-lg shadow-sky-500/25 disabled:opacity-40 transition">
-        MASUK KE MEJA PRAKTIKUM (STASIUN 1) →
-      </button>
-    </div>`;
-}
-function validateStart() {
-  const btn = document.getElementById('btn-enter-lab');
-  if (btn) btn.disabled = !(state.student.name.trim() && state.student.classRoom.trim() && state.student.group.trim());
-}
+function st5(){const s=S.s5;return `<div class="card"><div class="sop"><h3>Stasiun 5/10 — Ligasi DNA Rekombinan</h3><p>Sambungkan vektor pUC19 dan gen insulin 333 bp dengan T4 DNA Ligase.</p></div>
+ <div class="grid"><button class="bo ${s.a?'ok':''}" onclick="S.s5.a=1;R()">+ Vektor pUC19</button><button class="bo ${s.b?'ok':''}" onclick="S.s5.b=1;R()">+ Gen Insulin 333 bp</button><button class="bo ${s.c?'ok':''}" onclick="S.s5.c=1;R()">+ T4 DNA Ligase</button><button class="bo ${s.d?'ok':''}" onclick="S.s5.d=1;R()">+ Ligase Buffer (ATP)</button></div>
+ <div class="bench"><button class="bw" onclick="S.s5.v=1;say('in','Campuran homogen.')" ${!(s.a&&s.b&&s.c&&s.d)||s.v?'disabled':''}>🌀 Vortex Mixer</button>
+ <button class="bp" onclick="S.s5.ok=1;win(5,'Plasmid rekombinan pUC19-INS terbentuk utuh.')" ${!s.v||s.ok?'disabled':''}>❄️ Inkubasi Ligasi 16°C</button></div></div>`}
 
-/* ============================================================================
-   7. STATION 1: APD & BIOSAFETY CABINET (DRAG APD + SWITCHES + ETHANOL WIPE)
-// ... existing code ... -->
-      <div class="grid sm:grid-cols-3 gap-3 bg-slate-950/80 border border-slate-800 rounded-xl p-4 mb-5 text-xs">
-        <div>
-          <span class="text-slate-400 block">Nama Praktikan / Anggota</span>
-          <b class="text-sm text-white">${state.student.name}</b>
-        </div>
-        <div>
-          <span class="text-slate-400 block">Kelas</span>
-          <b class="text-sm text-white">${state.student.classRoom}</b>
-        </div>
-        <div>
-          <span class="text-slate-400 block">Kelompok</span>
-          <b class="text-sm text-white">${state.student.group}</b>
-        </div>
-      </div>
+function st6(){const s=S.s6;return `<div class="card"><div class="sop"><h3>Stasiun 6/10 — Transformasi Bakteri (Heat Shock 42°C)</h3><p>Campur plasmid ke <i>E. coli</i> kompeten di es → <b>Heat Shock 42°C tepat 40–50 detik</b> → Kembalikan ke es → Tambah media SOC.</p></div>
+ <div class="bench"><button class="bo ${s.a?'ok':''}" onclick="S.s6.a=1;R()">1. Campur Plasmid + E. coli di Es (0°C)</button>
+ <div class="lcd" style="color:#f59e0b">42.0 °C · Waktu: ${s.t} detik</div>
+ ${!s.tm?`<button class="bw" onclick="hs1()" ${!s.a||s.t>=40?'disabled':''}>2. Mulai Heat Shock 42°C</button>`:`<button class="bd" onclick="hs2()">⏹️ ANGKAT TABUNG (Target 45 dtk)</button>`}
+ <button class="bo ${s.c?'ok':''}" onclick="S.s6.c=1;R()" ${s.t<40||s.c?'disabled':''}>3. Dinginkan Kembali di Es (0°C)</button>
+ <button class="bp" onclick="S.s6.d=1;win(6,'Plasmid pUC19-INS berhasil masuk ke sel E. coli.')" ${!s.c||s.d?'disabled':''}>4. Tambah Media SOC & Recovery 37°C</button></div></div>`}
+function hs1(){S.s6.t=0;S.s6.tm=setInterval(()=>{S.s6.t+=5;beep(800,.03);if(S.s6.t>55){clearInterval(S.s6.tm);S.s6.tm=null;S.s6.t=0;say('bad','🔥 Terlalu lama (>55 dtk), sel bakteri pecah! Ulangi Heat Shock.')}else R()},500);R()}
+function hs2(){clearInterval(S.s6.tm);S.s6.tm=null;if(S.s6.t<40){S.s6.t=0;return say('bad','❄️ Terlalu cepat (<40 dtk)! Ulangi hingga 40–50 detik.')}say('in',`⏱️ Tepat (${S.s6.t} detik)! Lanjut langkah 3.`)}
 
-      <h3 class="text-xs font-bold uppercase tracking-wider text-sky-300 mb-2">Ringkasan Hasil Eksperimen</h3>
-      <table class="w-full text-xs border-collapse mb-5">
-        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400 w-2/5">Vektor & Sisipan Target</td><td class="py-2 font-semibold">Plasmid pUC19 (2686 bp) + Gen Insulin Manusia (333 bp)</td></tr>
-        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">Enzim Restriksi & Ligasi</td><td class="py-2 font-semibold">EcoRI + HindIII (Double Digest 37°C) • T4 DNA Ligase (16°C)</td></tr>
-        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">Transformasi & Seleksi</td><td class="py-2 font-semibold">E. coli Heat Shock 42°C (45 dtk) • LB + Ampisilin + X-Gal/IPTG</td></tr>
-        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">Verifikasi & Panen</td><td class="py-2 font-semibold">Amplikon PCR 333 bp Valid • Induksi IPTG & Kromatografi Afinitas</td></tr>
-        <tr><td class="py-2 text-slate-400">Catatan Peringatan Prosedur</td><td class="py-2 font-semibold">${state.errors} kali peringatan teknis</td></tr>
-      </table>
+function st7(){const s=S.s7;return `<div class="card"><div class="sop"><h3>Stasiun 7/10 — Penanaman Cawan Petri (Spread Plate)</h3><p>Sterilkan L-Spreader lalu <b>usap lingkaran kuning cawan agar</b> hingga rata 100%.</p></div>
+ <div class="grid"><button class="bo ${s.a?'ok':''}" onclick="S.s7.a=1;R()">1. Teteskan Bakteri</button><button class="bo ${s.b?'ok':''}" onclick="S.s7.b=1;R()" ${!s.a?'disabled':''}>2. Celup Alkohol</button><button class="bw" onclick="S.s7.c=1;R()" ${!s.b?'disabled':''}>3. Bakar di Bunsen</button><button class="bo ${s.d?'ok':''}" onclick="S.s7.d=1;R()" ${!s.c?'disabled':''}>4. Dinginkan Spreader</button></div>
+ <div class="petri" onpointermove="sp7()" onpointerdown="sp7()"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#78350f;font-weight:800;text-align:center;padding:12px">${!s.d?'Selesaikan langkah 1–4':'Usap agar! '+Math.min(100,s.p)+'%'}</div></div></div>`}
+function sp7(){const s=S.s7;if(!s.d||s.p>=100)return;s.p+=8;if(s.p>=100){s.p=100;win(7,'Bakteri tersebar merata di media LB + Ampisilin + X-Gal + IPTG.')}else R()}
 
-      <h3 class="text-xs font-bold uppercase tracking-wider text-sky-300 mb-2">Log Aktivitas Meja Kerja (10 Stasiun)</h3>
-      <div class="space-y-1.5 text-xs text-slate-300 mb-6">
-        ${state.logs.map(l => `<div class="p-2 rounded-lg bg-slate-950/70 border border-slate-800"><b class="text-teal-400">Stasiun ${l.station}:</b> ${l.text}</div>`).join('')}
-      </div>
+function st8(){const s=S.s8,cs=[[30,35,0],[68,30,1],[50,55,0],[70,68,1],[32,70,1]];
+ return `<div class="card"><div class="sop"><h3>Stasiun 8/10 — Blue-White Screening</h3><p>Bakar jarum ose, klik <b>KOLONI PUTIH</b> (rekombinan sukses), lalu inokulasi ke media cair.</p></div>
+ <button class="bw" onclick="S.s8.a=1;say('in','Jarum ose steril. Pilih koloni putih!')" ${s.a?'disabled':''}>1. 🔥 Bakar Jarum Ose</button>
+ <div class="petri">${cs.map(([x,y,w])=>`<div class="col" style="left:${x}%;top:${y}%;background:${w?'#fff':'#2563eb'}" onclick="pk8(${w})"></div>`).join('')}</div>
+ <button class="bp" onclick="S.s8.c=1;win(8,'Koloni putih rekombinan diinokulasikan ke kultur cair LB+Amp.')" ${!s.b||s.c?'disabled':''}>3. Celup ke Media Cair LB + Ampisilin</button></div>`}
+function pk8(w){if(!S.s8.a)return say('bad','Bakar jarum ose dulu!');if(!w)return say('bad','🔵 Koloni biru = plasmid kosong tanpa gen insulin. Pilih koloni PUTIH!');S.s8.b=1;say('in','⚪ Koloni putih terambil! Klik langkah 3.')}
 
-      <div class="no-print flex flex-wrap gap-3">
-        <button onclick="window.print()" class="flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-lg">
-          🖨️ Cetak / Simpan Laporan PDF
-        </button>
-        <button onclick="prevStation()" class="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 border border-slate-700 text-slate-200">
-          ← Kembali ke Stasiun 10
-        </button>
-        <button onclick="location.reload()" class="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 border border-slate-700 text-slate-200">
-          🔄 Mulai Praktikum Baru
-        </button>
-      </div>
-    </div>`;
-}
+function st9(){const s=S.s9;return `<div class="card"><div class="sop"><h3>Stasiun 9/10 — Konfirmasi PCR Koloni</h3><p>Verifikasi keberadaan sisipan gen insulin 333 bp menggunakan mesin Thermal Cycler.</p></div>
+ <div class="bench"><button class="bo ${s.a?'ok':''}" onclick="S.s9.a=1;R()">+ Sampel Koloni Putih</button><button class="bo ${s.b?'ok':''}" onclick="S.s9.b=1;R()">+ Taq PCR Master Mix</button><button class="bo ${s.c?'ok':''}" onclick="S.s9.c=1;R()">+ Primer Spesifik Insulin</button>
+ <div class="lcd">${s.ok?'30 SIKLUS SELESAI · PITA 333 BP VALID':'95°C → 55°C → 72°C'}</div>
+ <button class="bp" onclick="S.s9.ok=1;win(9,'Amplikon PCR 333 bp terkonfirmasi valid.')" ${!(s.a&&s.b&&s.c)||s.ok?'disabled':''}>Jalankan 30 Siklus PCR</button></div></div>`}
 
-render();
-</script>
-</body>
-</html>
-```
+function st10(){const s=S.s10;return `<div class="card"><div class="sop"><h3>Stasiun 10/10 — Induksi Ekspresi & Panen Insulin</h3><p>Aktifkan gen insulin dengan IPTG, pecahkan sel bakteri, dan murnikan protein insulin.</p></div>
+ <div class="bench"><button class="bo ${s.a?'ok':''}" onclick="S.s10.a=1;say('in','IPTG mengaktifkan transkripsi & translasi hormon insulin.')" ${s.a?'disabled':''}>1. Tambahkan Penginduksi IPTG</button>
+ <button class="bw" onclick="S.s10.b=1;say('in','Sel bakteri pecah melepaskan protein insulin.')" ${!s.a||s.b?'disabled':''}>2. Sonikasi (Pecah Sel Bakteri)</button>
+ <button class="bp" onclick="S.s10.c=1;win(10,'Protein insulin manusia murni berhasil dipanen!')" ${!s.b||s.c?'disabled':''}>3. Kromatografi Afinitas (Panen Insulin)</button></div></div>`}
+R();
+</script></body></html>
